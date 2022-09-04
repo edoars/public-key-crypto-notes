@@ -1,0 +1,510 @@
+%!TEX root = ../main.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 02/03/2017 - PRIMA SETTIMANA (2)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Crittografia a chiave pubblica}
+\section{Introduzione}
+
+	Nella crittografia simmetrica, di cui abbiamo dato una breve introduzione nel capitolo precedente, \emph{Alice} e \emph{Bob} condividono la stessa chiave \(k\).
+	La chiave è stata scelta e scambiata fra loro prima dell'inizio della comunicazione.
+	Tramite la stessa chiave si ha accesso ad una funzione di cifratura \(e_k\) e ad una di decifratura \(d_k\).
+	Generalmente \(d_k\) è facilmente ricavabile da \(e_k\); ciò significa che, tipicamente, se si è in grado di cifrare un messaggio allora lo si sa anche decifrare.
+
+	Come già accennato, prima di cominciare a comunicare è necessario scegliere e scambiarsi la chiave segreta tramite un canale sicuro. Se l'avversario intercetta la chiave, la comunicazione viene compromessa.
+	L'idea della crittografia a chiave pubblica, o crittografia \emph{asimmetrica}, è proprio quella di ovviare allo scambio della chiave.
+
+	Si cerca quindi di sviluppare un crittosistema in cui, data la funzione di cifratura \(e_k\), sia computazionalmente difficile determinare \(d_k\).
+	Così facendo, \emph{Bob} può rendere pubblica la sua funzione di cifratura \(e_k\); tramite questa, \emph{Alice} può scrivergli senza bisogno di accordi preliminari.
+	\emph{Bob} è inoltre l'unico che può decifrare il messaggio.
+
+	Concretamente, è necessario che la funzione di cifratura si una \emph{funzione unidirezionale}.
+	In seguito ne daremo una definizione precisa, informalmente una funzione invertibile \(f\colon P \to C\), si dice unidirezionale se:
+	\begin{itemize}
+		\item Dato \(x\in P\), il calcolo di \(f(x)\) è "facile", cioè è realizzabile con una complessità polinomiale.
+		\item Per quasi ogni valore di \(y\in C\), il calcolo di \(f^{-1}(y)\) è "difficile", cioè non è realizzabile con una complessità polinomiale.
+	\end{itemize}
+
+	\begin{ese}[Funzione unidirezionale]
+	Sia \(n=p\,q\) con \(p,q\) numeri primi sufficientemente grandi e sia \(b\) un intero coprimo con \(\j(n)\)\graffito{\(\j(n)\) è la funzione di Eulero di \(n\)}. Consideriamo la seguente funzione
+		\[
+		f\colon \Z_n \longrightarrow \Z_n, x \longmapsto x^b \pmod{n}
+		\]
+	\(f\) è una funzione ritenuta unidirezionale.
+	\end{ese}
+
+	Sembra evidente che se la funzione è unidirezionale, anche per \emph{Bob} è impossibile decifrare il messaggio.
+	Proprio per questo motivo le funzioni usate nella crittografia a chiave pubblica sono le cosiddette \emph{trapdoor one-way function}, ovvero funzioni unidirezionali che si invertono facilmente quando si conosce un'informazione supplementare.
+	Tale informazione sarà tenuta segreta da \emph{Bob}, il quale la utilizzerà per decifrare il messaggio.
+	Riepilogando avremo
+	\begin{itemize}
+		\item Una \emph{chiave pubblica}, resa nota a tutti, che verrà utilizzata per cifrare.
+		\item Una \emph{chiave privata}, nota solo a \emph{Bob}, che verrà utilizzata per decifrare.
+	\end{itemize}
+
+\section{Cenni di teoria della complessità}
+
+	Ci occuperemo ora di stabilire, in maniera piuttosto grossolana, l'efficienza di un algoritmo.
+	In questo corso ci occuperemo di algoritmi che operano sugli interi, pertanto l'input sarà costituito da uno o più interi.
+
+	L'efficienza di un algoritmo viene misurata nel tempo necessario a terminare con successo l'algoritmo stesso.
+	Più direttamente, per non rendere la stima dipendente dal sistema usato per misurarla, il tempo dipenderà direttamente dalla lunghezza dell'input.
+	Nello specifico, misureremo il tempo di esecuzione in base al numero di \emph{operazioni bit elementari} necessarie a completare l'algoritmo.
+
+	\begin{defn}{Operazioni bit}{operazioniBit}\index{Operazioni bit}
+	Con \emph{operazioni bit} intendiamo una fra le seguenti:
+	\begin{itemize}
+		\item Somma di due cifre binarie.
+		\item Moltiplicazione di due cifre binarie.
+		\item Divisione di un intero a due cifre binarie per una cifra binaria.
+		\item Traslazione a sinistra o a destra di una stringa binaria.
+	\end{itemize}
+	\end{defn}
+
+	Come già sottolineato, a noi interessa stimare approssimativamente il numero di tali operazioni all'interno di un algoritmo.
+	Introduciamo ora la notazione \(\bO\) grande per formalizzare i concetti di complessità computazionale.
+
+	\begin{defn}{Notazione \(\bO\) grande}{notazioneOGrande}\index{O grande}
+	Siano \(f,g\colon D \to \R^+, \N\subseteq D\).
+	Si dice che \(g\) è \emph{dominata} da \(f\) e si scrive \(g\in \bO(f)\), se esistono \(k,N\in\R\) tali che
+		\[
+		g(x) \le k\,f(x) ,\,\fa x > N.
+		\]
+	\end{defn}
+
+	\begin{notz}
+	Dalla definizione segue che \(\bO(f)\) è l'insieme delle funzioni dominate da \(f\).
+	\end{notz}
+
+	\begin{oss}
+	In generale se si ha
+		\[
+		\lim_{n\to \infty} \frac{f(n)}{g(n)} = l \neq 0,
+		\]
+	allora \(f\in \bO(g)\) e \(g\in \bO(f)\).
+	D'altronde può accadere che quest'ultima condizione sia comunque verificata ma che il limite del rapporto non esista. Ad esempio, se \(f(n) = \big(3+(-1)^n\big)n^3\) e \(g(n)=n^3\), chiaramente si ha \(f\in \bO(g)\) e \(g\in \bO(f)\), ma 
+		\[
+		\lim_{n\to \infty} \frac{f(n)}{g(n)} = \lim_{n\to \infty} \big(3+(-1)^n\big)
+		\]
+	non esiste.
+	\end{oss}
+
+	\begin{ese}
+	Poniamo \(D=\N\) e siano \(f(n) = n^5, g(n) = 5n^5+3n+2\).
+	Chiaramente \(f\in \bO(g)\) poiché
+		\[
+		f(n) \le g(n),\,\fa n.
+		\]
+	D'altronde avremo anche \(g\in \bO(f)\), infatti
+		\[
+		g(n) = 5n^5+3n+2 \le 5n^5+3n^5+2n^5 = 10n^5 = 10\,f(n),\,\fa n.
+		\]
+	\end{ese}
+
+	\begin{ese}
+	Sia \(f(n) = n^3\log_2 n\).
+	Definitivamente si ha \(\log_2 n \le n\), da cui
+		\[
+		f\in \bO(n^4).
+		\]
+	\end{ese}
+
+	\begin{pr}
+	Siano \(g_1\in \bO(f_1)\) e \(g_2\in \bO(f_2)\), allora
+		\[
+		g_1+g_2 \in \bO(f_1+f_2).
+		\]
+	\end{pr}
+
+	\begin{proof}
+	Per definizione
+		\[
+		g_1 \in \bO(f_1) \implies \,\ex k_1,N_1: g_1(x) \le k_1 f_1(x),\,\fa x > N_1.
+		\]
+	Analogamente
+		\[
+		g_2 \in \bO(f_2) \implies \,\ex k_2,N_2: g_2(x) \le k_2 f_2(x),\,\fa x > N_2.
+		\]
+	Siano \(N=\max\{N_1,N_2\}\) e \(k = \max\{k_1,k_2\}\). Allora se \(x>N\) avremo
+		\[
+		g_1(x)+g_2(x) \le k_1 f_1(x) + k_2 f_2(x) \le k\,\big(f_1(x)+f_2(x)\big).
+		\]
+	ovvero \(g_1+g_2\in \bO(f_1+f_2)\).
+	\end{proof}
+
+	\begin{pr}
+	Siano \(g_1\in \bO(f_1)\) e \(g_2\in \bO(f_2)\), allora
+		\[
+		g_1 g_2 \in \bO(f_1 f_2).
+		\]
+	\end{pr}
+
+	\begin{proof}
+	Analoga alla precedente.
+	\end{proof}
+
+	\begin{pr}
+	Siano \(g_1\in \bO(f_1)\) e \(c>0\), allora
+		\[
+		c\,g_1 \in \bO(f_1).
+		\]
+	\end{pr}
+
+	\begin{proof}
+	Analoga alla precedente.
+	\end{proof}
+
+	\begin{defn}{Grandezza di un intero}{grandezzaIntero}\index{Grandezza di un intero}
+	Definiamo la \emph{grandezza} di un intero \(n\) come la sua lunghezza in notazione binaria \(L_2(n)\).
+	\end{defn}
+
+	\begin{oss}
+	Se \(2^{k-1}\le n < 2^k\) avremo
+		\[
+		k-1 \le \log_2 n < k \implies k = L_2(n) = [\log_2 n] + 1,
+		\]
+	per cui \(L(n) \in \bO(\log_2 n)\).
+	\end{oss}
+
+	\begin{ese}
+	Se \(n=24\) la sua grandezza è 5, infatti
+		\[
+		24 = 11000_2
+		\]
+	\end{ese}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 07/03/2017 - SECONDA SETTIMANA (1)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	Se l'input dell'algoritmo \(A\) è costituito dagli interi \(n_1,\ldots,n_s\), poniamo
+		\[
+		n = \max\{\abs{n_1},\ldots,\abs{n_s}\} \qquad\text{e}\qquad k=L(n).
+		\]
+	Con \(T(A)\) definiamo il tempo di esecuzione di \(A\), pari a circa il numero di operazioni bit elementari che servono per l'esecuzione dell'algoritmo.
+	\(T(A)\) sarà pertanto una funzione di \(k\). In particolare noi saremo interessati ad una stima del tipo \(T(A)\in \bO\big(f(k)\big)\).
+
+	\begin{defn}{Algoritmo polinomiale}{algoritmoPolinomiale}\index{Algoritmo polinomiale}
+	Un algoritmo \(A\) si dice \emph{polinomiale} se esiste \(d\ge 1\) tale che
+		\[
+		T(A) \in \bO(k^d).
+		\]
+	\end{defn}
+
+	\begin{notz}
+	L'esponente \(d\) si dice \emph{ordine di \(A\)}.
+	\end{notz}
+
+	\begin{defn}{Algoritmo esponenziale}{algoritmoEsponenziale}\index{Algoritmo esponenziale}
+	Un algoritmo \(A\) si dice \emph{esponenziale} se esiste \(c>0\) tale che
+		\[
+		T(A) \in \bO(2^{c\,k}).
+		\]
+	\end{defn}
+
+	\begin{notz}
+	Diremo che \(A\) è \emph{sottoesponenziale} se
+		\[
+		T(A) \in \bO(2^{f(k)}) \qquad\text{dove } \lim_{n \to \infty} \frac{f(n)}{n} = 0.
+		\]
+	\end{notz}
+\section{Calcolo della complessità di algoritmi noti}
+
+	In questo paragrafo studieremo la complessità computazionale di alcuni algoritmi basilari e/o noti.
+
+	In generale faremo riferimento ad \(a\) e \(b\) come due interi con \(a \ge b\), inoltre denoteremo
+		\[
+		L(a) = k \qquad\text{e}\qquad L(b) = h.
+		\]
+
+	\begin{prop}{Complessità della somma}{complessitàSomma}
+	Consideriamo l'algoritmo per la somma di due interi \(a+b\), allora
+		\[
+		T(a+b) \in \bO(k).
+		\]
+	\end{prop}
+
+	\begin{proof}
+	Una somma fra due interi è compiuta attraverso \(k\) somme elementari tra i bit che li compongono.
+	Eventualmente tali somme potrebbero causare un riporto che necessita di un'ulteriore somma.
+	Al più vi saranno quindi \(2k\) operazioni bit. Ne segue
+		\[
+		T(a+b) \in \bO(k).\qedhere
+		\]
+	\end{proof}
+
+	\begin{oss}
+	Analogamente si mostra \(T(a-b)\).
+	\end{oss}
+
+	\begin{prop}{Complessità della moltiplicazione}{complessitàMoltiplicazione}
+	Consideriamo l'algoritmo per il prodotto di due interi \(a\,b\), allora
+		\[
+		T(a\,b) \in \bO(k^2).
+		\]
+	\end{prop}
+
+	\begin{proof}
+	Per ognuna delle \(h\) cifre di \(b\) bisogna eseguire \(k\) moltiplicazioni elementari tra bit, per un totale di \(h\,k\) moltiplicazioni elementari.
+	Infine è necessario compiere \(h-1\) somme tra i prodotti parziali precedentemente calcolati.
+	Per la proposizione precedente sappiamo che la somma ha una complessità lineare ed ha pertanto un ordine inferiore rispetto alle moltiplicazioni precedenti. Quindi
+		\[
+		T(a\,b) \in \bO(h\,k) \subseteq \bO(k^2).\qedhere
+		\]
+	\end{proof}
+
+	\begin{oss}
+	Esistono altri algoritmi che eseguono il prodotto fra interi in modo più efficiente, raggiungendo una complessità che è circa \(\bO(k^{1,5})\).
+	\end{oss}
+
+	\begin{prop}{Complessità della divisione}{complessitàDivisione}
+	Consideriamo l'algoritmo della divisione con resto fra interi \(a/b\), allora
+		\[
+		T(a/b) \in \bO(k^2).
+		\]
+	\end{prop}
+
+	\begin{proof}
+	L'algoritmo della divisione con resto è quello "classico" della divisione in colonna.
+	Ad ogni passaggio si confronta il dividendo con il resto della divisione precedente; questo confronto, nel caso binario, può dare \(1\) se il divisore coincide con il dividendo o \(0\) altrimenti. Dopodiché si fanno \(h\) moltiplicazioni del risultato del confronto per le \(h\) cifre di \(b\) e si sottrae il risultato al resto precedente.
+
+	Complessivamente si fanno \(h\) moltiplicazioni per la lunghezza del quoziente e altrettante sottrazioni. Le sottrazioni sono di un ordine più basso rispetto alle moltiplicazioni, resta quindi da stimare la lunghezza del quoziente.
+		\[
+		a = b\,q +r \implies L(a) = L(b\,q) + L(r).
+		\]
+	Osserviamo che, in generale, se \(a\ge b\), avremo
+		\[
+		L(a+b)  = 	\begin{cases}
+					L(a)\\
+					L(a)+1
+					\end{cases}
+		\qquad\text{e}\qquad
+		L(a\,b) = 	\begin{cases}
+					L(a)+L(b)-1\\
+					L(a)+L(b)
+					\end{cases}
+		\]
+	Considerando i casi computazionalmente peggiori e ricordando che \(r<b\), avremo
+		\[
+		L(a) = L(b\,q)+L(r) = L(b\,q)+1 = L(b)+L(q)+1 \implies L(q) = L(a)-L(b) < L(a).
+		\]
+	Per cui abbiamo \(h\,k\) operazioni elementari, da cui
+		\[
+		T(a/b) \in \bO(k^2).\qedhere
+		\]
+	\end{proof}
+
+	\begin{prop}{Complessità dell'algoritmo euclideo}{complessitàAlgoritmoEuclideo}
+	Consideriamo l'algoritmo euclideo per il calcolo del MCD, allora
+		\[
+		T\big((a,b)\big) \in \bO(k^3).
+		\]
+	\end{prop}
+
+	\begin{proof}
+	In generale possiamo supporre \(a>b>0\).
+	Chiamiamo \(r_0=a\) e \(r_1=b\). Tramite la divisione col resto otteniamo
+		\begin{gather*}
+		r_0 = q_1 r_1 + r_2,\\
+		r_1 = q_2 r_2 + r_3,\\
+		...
+		\end{gather*}
+	Iterando questo procedimento, al passo \(i\) avremo
+		\[
+		r_{i-1} = q_i r_i + r_{i+1}.
+		\]
+	Dopo un certo numero di passi, che siamo sicuri essere finito poiché \(r_1 > r_2 > \ldots\), arriveremo a
+		\[
+		r_{m-1} = q_m r_m + 0 \implies (a,b) = r_m.
+		\]
+	Quindi nell'algoritmo vengono compiute \(m\) divisioni.
+	Poiché di queste ultime conosciamo già il peso computazionale, dobbiamo stimare \(m\) in termini di \(k\).
+
+	Lo scenario computazionalmente peggiore è quello in cui il resto diminuisca sempre di \(1\).
+	In questo caso \(m\) sarebbe confrontabile con \(b \approx 2^h\). Se questa fosse la migliore stima, la complessità di \((a,b)\) sarebbe esponenziale.
+	
+	Cerchiamo quindi una stima migliore per \(m\). Consideriamo i primi tre passi:
+		\[
+		a = b\,q + r, \qquad b = q'r + r' \qquad r = q'' r' + r'',
+		\]
+	e mostriamo che \(2r \le a\). Ci sono due casi:
+	\begin{itemize}
+		\item Se \(q=1\) avremo \(r= a-b\). Inoltre \(q=1\) può avvenire solo se \(b > a/2\), da cui
+			\[
+			r < \frac{a}{2}.
+			\]
+		\item Se \(q > 1\) necessariamente \(b \le a/2\), da cui
+			\[
+			r < b \le \frac{a}{2}.
+			\]
+	\end{itemize}
+	Pertanto \(2r \le a\). In generale
+		\[
+		2 r_{i+2} \le r_i \implies m \le \lfloor \log_2 a \rfloor +1,
+		\]
+	che ci permette di concludere
+		\[
+		T\big((a,b)\big) \in \bO(k^3).\qedhere
+		\]
+	\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 08/03/2017 - SECONDA SETTIMANA (2)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problemi P e NP}
+
+	Introduciamo brevemente la classe di problemi \(P\) e \(NP\) per poi valutarne l'applicabilità ad eventuali algoritmi crittografici.
+
+	\begin{defn}{Problemi \(P\)}{problemiP}
+	Definiamo \(P\) la classe di problemi per cui esiste un algoritmo che risolve il dato problema in tempo \emph{polinomiale}.
+	\end{defn}
+
+	\begin{defn}{Problemi \(NP\)}{problemiNP}
+	Definiamo \(NP\) la classe di problemi per cui esiste un algoritmo che li risolve (non necessariamente in tempo polinomiale) e tali che, un'eventuale soluzione può essere verificata in tempo polinomiale.
+	\end{defn}
+
+	\begin{oss}
+	Chiaramente si ha \(P\subseteq NP\). Uno dei problemi centrali della teoria della complessità è proprio stabilire se
+		\[
+		P \neq NP.
+		\]
+	\end{oss}
+
+	\begin{defn}{Problemi \(NP\)-completi}{}
+	Un problema \(\p\) di classe \(NP\) si dice \(NP\)-completo se, per ogni problema \(\p'\in NP\), esiste un algoritmo che riduce la soluzione di \(\p'\) ad una di \(\p\) in tempo polinomiale.
+	\end{defn}
+
+	\begin{oss}
+	Se esistesse un algoritmo che risolve un problema \(NP\)-completo in tempo polinomiale, si avrebbe immediatamente
+		\[
+		P = NP.
+		\]
+	I problemi \(NP\)-completi sono quindi, di fatto, i problemi computazionalmente più difficili tra quelli di classe \(NP\).
+	\end{oss}
+\section{Problema dello zaino}
+
+	In questo paragrafo studieremo un problema \(NP\)-completo e una sua applicazione nella crittografia a chiave pubblica.
+
+	Supponiamo di avere uno zaino che possa contenere \(b\) unità e una lista di oggetti di volume \(a_1, \ldots, a_k\).
+	Il problema dello zaino è riempire completamente lo zaino, formalmente dobbiamo trovare una \(k\)-pla
+		\[
+		e = (e_1, \ldots, e_k) \qquad\text{con }e_i \in \{0,1\},
+		\]
+	tale che
+		\[
+		b = \sum_{i=1}^k e_i a_i;
+		\]
+	oppure mostrare che tale \(k\)-pla non esiste.
+
+	\'E facile osservare che si tratta di un problema computazionalmente difficile, dati \(k\) oggetti vi sono infatti \(2^k\) possibili combinazioni di tali oggetti.
+	Nonostante ci siano algoritmi più efficienti, non ne esiste nessuno polinomiale.
+	D'altronde la verifica di una possibile soluzione avviene in tempo lineare, pertanto il problema dello zaino è un problema di classe \(NP\). Si dimostra inoltre essere \(NP\)-completo.
+
+	Affinché vi sia una rilevanza dal punto di vista crittografico, dobbiamo identificare dei casi in cui la risoluzione del problema dello zaino sia computazionalmente facile. Definiamo quindi un particolare tipo di successioni per cui ciò avviene
+
+	\begin{defn}{Successioni supercrescenti}{successioniSupercrescenti}
+	Una successione \((a_1,\ldots,a_k)\) si dice \emph{supercrescente} se ogni termine è maggiore della somma dei precedenti, ovvero se
+		\[
+		a_i > \sum_{j=1}^{i-1} a_j.
+		\]
+	\end{defn}
+	\noindent
+	Il motivo per cui una successione supercrescente rende facile il problema dello zaino è che, per verificare se una soluzione esiste, è sufficiente inserire nello zaino gli oggetti più grandi possibili.
+	Infatti se l'oggetto \(a_i\) fosse il più grande inseribile nello zaino, anche se scegliessimo di inserire tutti gli oggetti che lo precedono al suo posto, otterremo comunque una grandezza più piccola di \(a_i\).
+	Questo ci garantisce inoltre che la soluzione, se esiste, è unica.
+
+	\begin{ese}
+	Consideriamo la seguente successione supercrescente
+		\[
+		(1,2,4,8,16,32).
+		\]
+	Cerchiamo di riempire uno zaino con \(b=45\) utilizzando la strategia enunciata prima, anche detta "greedy":
+	\[
+	45 = 32+\emph{13} = 32+8+\emph{5} = 32+8+4+1.
+	\]
+	\end{ese}
+\section{Crittosistema di Merkle-Hellman}
+
+	Il crittosistema di Merkle-Hellman si basa sul problema dello zaino e sfrutta un mascheramento delle successioni supercrescenti per costruire la chiave privata.
+
+	L'idea di base è la seguente:
+	\begin{itemize}
+		\item La chiave privata è costituita da una successione \((a_1,\ldots,a_k)\).
+		\item Il messaggio, per essere cifrato, deve essere una stringa binaria \((e_1,\ldots,e_k)\) di \(k\) elementi.
+		\item Il messaggio cifrato è
+			\[
+			b = \sum_{i=1}^k e_i a_i
+			\]
+		dove sappiamo che \(e_i\in\{0,1\}\).
+	\end{itemize}
+	In questo modo, per decifrare il messaggio bisognerebbe risolvere un problema dello zaino.
+	D'altronde in queste condizioni il messaggio non può essere decifrato neppure da Bob.
+
+	Dobbiamo quindi sfruttare le proprietà sulle successioni supercrescenti che abbiamo visto nel precedente paragrafo.
+	Chiaramente la chiave pubblica non può essere una successione supercrescente, altrimenti chiunque potrebbe decifrare il messaggio. \'E necessario mascherare questa proprietà.
+
+	Bob sceglie una successione supercrescente \((a_1,\ldots,a_k)\). Sceglie inoltre due interi \(n\) e \(u<n\) tali che
+		\[
+		n > \sum_{i=1}^k a_i \qquad\text{e}\qquad (u,n) = 1.
+		\]
+	Attraverso questi ultimi costruisce una nuova successione \((a_1^*,\ldots,a_k^*)\) tale che
+		\[
+		a_i^* \equiv u\,a_i \pmod{n}.
+		\]
+	Così facendo avremo
+	\begin{itemize}
+		\item \((a_1,\ldots,a_k), n\) e \(u\) la chiave privata.
+		\item \((a_1^*, \ldots a_k^*)\) la chiave pubblica.
+	\end{itemize}
+	La cifratura avviene come descritto prima, Alice invia 
+		\[
+		b^* = \sum_{i=1}^k e_i a_i^*.
+		\]
+	Per decifrare, Bob calcola \(v\), l'inverso moltiplicativo di \(u\) modulo \(n\).
+	Tramite \(v\) calcola
+		\[
+		b = v\,b^* \pmod{n}.
+		\]
+	Ora
+		\[
+		\begin{split}
+		b & \equiv v\,b^* \equiv v\, \sum_{i=1}^k e_i a_i^* \equiv v \,\sum_{i=1}^k e_i u\,a_i\equiv v\,u\,\sum_{i=1}^k e_i a_i\\
+		& \equiv \sum_{i=1}^k e_i a_i \pmod{n}
+		\end{split}
+		\]
+	Inoltre sia \(b\) che \(\sum_{i}e_i a_i\) sono minori di \(n\), per cui
+		\[
+		b \equiv_n \sum_{i=1}^k e_i a_i \implies b = \sum_{i=1}^k e_i a_i.
+		\]
+	A questo punto Bob deve risolvere un problema dello zaino facile per decifrare il messaggio.
+
+	\begin{ese}
+	Come chiave privata utilizziamo
+		\[
+		(1, 3, 7, 15, 31, 63, 127, 255), \qquad n=557, \qquad u=323.
+		\]
+	Osserviamo che, come da condizione, \(n\) è maggiore della somma della successione e \(u\) è coprimo con \(n\).
+	Moltiplicando ogni termine della successione supercresente per \(u\) e riducendo modulo \(n\), si ottiene la chiave pubblica
+		\[
+		(323, 412, 33, 389, 544, 297, 360, 486).
+		\]
+	Supponiamo di voler cifrare la stringa binaria \(01100101\) che ha lunghezza \(8\) come la chiave. Otterremo la codifica
+		\[
+		b^* = 0\cdot323+1\cdot412+1\cdot33 + 0\cdot389 + 0\cdot544 + 1\cdot297 + 0\cdot360 + 1\cdot486 = 1228.
+		\]
+	Bob riceve \(b^*\). Calcola \(v=169\) l'inverso di \(u\) modulo \(n\) per ottenere
+		\[
+		 b = v\,b^* \equiv 328 \pmod{n}.
+		\]
+	Risolve il problema dello zaino con \(b=328\) e la sua successione supercrescente:
+		\[
+		328 = 255 + \emph{73} = 255+63 + \emph{10} = 255+63+7+3.
+		\]
+	Confrontando con i termini presenti nella successione supercrescente riottiene la stringa \(01100101\).
+	\end{ese}
+
+	Il crittosistema che abbiamo descritto in questo paragrafo è stato sviluppato da Merkle e Hellman nel 1978.
+	\'E un sistema molto elegante, molto più semplice di sistemi come l'RSA.
+	D'altronde venne violato piuttosto in fretta, nel 1984 Shamir pubblicò un articolo in cui esponeva un algoritmo che forzava il crittosistema in tempo polinomiale.

@@ -1,0 +1,623 @@
+%!TEX root = ../main.tex
+\chapter{Il problema del logaritmo discreto}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 02/05/2017 - NONA SETTIMANA (1)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduzione}
+
+	Cominciamo col richiamare alcune definizioni e proprietà dei gruppi ciclici, per poi introdurre il problema del logaritmo discreto.
+
+	\begin{defn}{Gruppo ciclico}{gruppoCiclico}
+	Un gruppo \(G\) si dice ciclico se esiste \(g\in G\) tale che
+		\[
+		G = \langle g \rangle.
+		\]
+	\end{defn}
+
+	\begin{ese}
+	\(U(\Z_9)=\langle 2\rangle\) è un gruppo ciclico, mentre \(U(\Z_8)\) non lo è.
+	\end{ese}
+
+	\begin{pr}
+	Il gruppo \(U(\Z_p)\) degli invertibili di \(\Z_p\), con \(p\) primo, è ciclico.
+	\end{pr}
+
+	\begin{pr}
+	Se \(\F_{p^m}\) è un campo finito, allora il suo gruppo moltiplicativo
+		\[
+		\big(\F_{p^m}\setminus\{0\},\cdot\big),
+		\]
+	è un gruppo ciclico.
+	\end{pr}
+
+	\begin{defn}{Problema del logaritmo discreto}{problemaLogaritmoDiscreto}\index{Logaritmo discreto}
+	Sia \(G\) ciclico di ordine \(n\) e sia \(g\) un generatore di \(G\).
+	Dato \(y\in G,y\neq 1\), il \emph{problema del logaritmo discreto} è quello di determinare l'unico \(x\) tale che
+		\[
+		g^x = y \qquad\text{con }1\le x \le n-1.
+		\]
+	\end{defn}
+
+	\begin{notz}
+	L'intero \(x\) si chiama logaritmo discreto di \(y\) in base \(g\) e si scrive
+		\[
+		x = \log_g y.
+		\]
+	\end{notz}
+	\noindent
+	Tipicamente lavoreremo in \(\Z_p^*\) o, più in generale, in \(\F_q^*\) con \(q=p^m\) e \(p\) primo.
+	Vedremo come, dati \(g\) generatore di \(\Z_p^*\) e \(x\) tale che \(1\le x \le p-1\), calcolare \(y=g^x\) è computazionalmente facile (si tratta di applicare l'algoritmo square and multiply); viceversa, si ritiene che, dati \(g\) generatore di \(\Z_p^*\) e \(y\in\Z_p^*\), determinare \(x=\log_g y\) sia computazionalmente difficile.
+
+	\begin{oss}
+	Quest'ultima affermazione è vera per opportune scelte di \(p\), in particolare \(p\) deve essere molto grande.
+	\end{oss}
+
+	\section{Scambio della chiave di Diffie-Hellman}
+
+	Un protocollo di scambio della chiave serve affinché due interlocutori, che inizialmente non condividono nessuna informazione segreta, possano, al termine del protocollo, condividere una chiave segreta.
+	Chiaramente il procedimento è studiato in modo tale, che un eventuale ascoltatore non ottenga nessuna informazione sulla chiave.
+
+	Come al solito faremo riferimento ai due interlocutori con i nomi di Alice e Bob, o, più sinteticamente, con \(A\) e \(B\). Descriviamo il protocollo:
+	\begin{itemize}
+		\item \(A\) e \(B\) scelgono pubblicamente un primo \(p\) e un elemento primitivo \(g\pmod{p}\).
+		\item \(A\) sceglie casualmente \(a\in\{2,\ldots,p-2\}\) e calcola \(g^a\pmod{p}\), inviando il risultato a \(B\).
+		\item \(B\) sceglie casualmente \(b\in\{2,\ldots,p-2\}\) e calcola \(g^b\pmod{p}\), inviando il risultato ad \(A\).
+		\item \(A\) calcola \({(g^b)}^a\pmod{p}\).
+		\item \(B\) calcola \({(g^a)}^b\pmod{p}\).
+		\item La chiave segreta è
+			\[
+			k = g^{a\,b}
+			\]
+	\end{itemize}
+	\noindent
+	La sicurezza del protocollo si basa sul problema del logaritmo discreto, anche se non è del tutto equivalente.
+	Chiaramente se l'attaccante è in grado di risolvere il logaritmo discreto allora è in grado di ricavare la chiave segreta.
+	D'altronde otterrebbe lo stesso risultato se fosse in grado di ottenere \(g^{a\,b}\) conoscendo \(g^a\) e \(g^b\).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 04/05/2017 - NONA SETTIMANA (2)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\section{Cenni sui campi finiti}
+
+	\begin{pr}
+	Sia \(F\) un campo finito, allora \(\abs{F}=p^m\) con \(p\) primo.
+	\end{pr}
+
+	\begin{pr}
+	Per ogni \(p\) primo e per ogni \(m\ge 1\), esiste un unico campo finito \(F\) con \(p^m\) elementi. Tale campo si denota con \(\F_{p^m}\).
+	\end{pr}
+
+	\begin{oss}
+	Per \(m=1\) si ha \(\F_p=\Z_p\).
+	\end{oss}
+	\noindent
+	In generale \(\F_{p^m}\) si costruisce quozientando l'anello dei polinomi \(\Z_p[X]\) con l'ideale generato da un polinomio irriducibile \(f(X)\in\Z_p[X]\) di grado \(m\), ovvero
+		\[
+		\F_{p^m} = \frac{\Z_p[X]}{\big(f(X)\big)} \qquad\text{con }\deg f = m.
+		\]
+
+	\begin{ese}
+	Il polinomio \(f(X)=X^3+X+1\) è irriducibile in \(\Z_2[X]\), per cui possiamo costruire il campo finito
+		\[
+		\F_8 = \frac{\Z_2[X]}{\big(f(X)\big)}.
+		\]
+	\end{ese}
+	\noindent
+	Con metodi analoghi a quelli utilizzati nei capitoli precedenti, possiamo stimare la complessità computazionale in \(\Z_p\) e \(\F_q\) con \(q=p^m\). In \(\Z_p\), detto \(k=L(p)\), avremo
+	\begin{itemize}
+		\item Somma e differenza: \(\bO(k)\).
+		\item Prodotto: \(\bO(k^2)\).
+		\item Calcolo inverso moltiplicativo: \(\bO(k^3)\).
+		\item Esponenziazione modulare: \(\bO(k^3)\).
+	\end{itemize}
+	In \(\F_q\), detto \(h=L(q)=m\,L(p)\), avremo
+	\begin{itemize}
+		\item Somma e differenza: \(\bO(h)\).
+		\item Prodotto: \(\bO(h^2)\).
+		\item Calcolo inverso moltiplicativo: \(\bO(h^3)\).
+		\item Esponenziazione: \(\bO\big(h^3 L(e)\big)\).
+	\end{itemize}
+
+	\begin{defn}{Polinomio primitivo}{polinomioPrimitivo}
+	Si definisce \emph{polinomio primitivo} il polinomio minimo di un elemento primitivo di un campo finito \(\F_q\) con \(q=p^m\).
+	\end{defn}
+
+	\begin{oss}
+	In particolare un polinomio primitivo sarà un polinomio irriducibile in \(\Z_p[X]\) di grado \(m\).
+	\end{oss}
+
+	\begin{ese}
+	Consideriamo il campo finito dell'esempio precedente
+		\[
+		\F_8 = \frac{\Z_2[X]}{(X^3+X+1)}.
+		\]
+	Come vedremo nel prossimo paragrafo, \(\F_8^*\) è ciclico e inoltre \(\abs{\F_8^*}=7\) è primo, per cui ogni elemento distinto dall'identità è un generatore. Ad esempio \(X\) lo è.
+	Pertanto \(X^3+X+1 \in \Z_2[X]\) è un polinomio primitivo.
+	\end{ese}
+
+\section{Alcune proprietà dei gruppi ciclici}
+
+	Sia \(G\) un gruppo moltiplicativo ciclico di ordine \(n\). In particolare esiste \(g\in G\) generatore di \(G\). Quindi
+		\[
+		\ord(g) = n \qquad\text{e}\qquad G=\langle g \rangle = \Set{g,g^2,\ldots,g^{n-1},g^n=1}.
+		\]
+
+	\begin{pr}
+	Sia \(g\) un generatore di \(G\), allora \(a=g^i\) è un altro generatore di \(G\) se e soltanto se
+		\[
+		(i,n) = 1.
+		\]
+	\end{pr}
+
+	\begin{oss}
+	In particolare segue che \(G\) ha \(\j(n)\) generatori.
+	\end{oss}
+
+	\begin{pr}
+	Un gruppo ciclico ha \(\j(d)\) elementi di ordine \(d\) per ogni \(d\mid n\).
+	\end{pr}
+
+	\begin{oss}
+	Da ciò segue che \(G\) ha sottogruppi di ordine \(n\) per ogni \(d\mid n\).
+	\end{oss}
+
+	\begin{pr}
+	La cardinalità di \(G\) soddisfa la seguente identità:
+		\[
+		\abs{G} = n = \sum_{d\mid n} \j(d).
+		\]
+	\end{pr}
+
+	\begin{lem}
+	Sia \(G\) un gruppo finito moltiplicativo con \(\abs{G}=n\). Supponiamo che per ogni \(d\mid n\) si abbia che
+		\[
+		\#\Set{x\in G | x^d = 1} \le d.
+		\]
+	Allora \(G\) è ciclico.
+	\end{lem}
+
+	\begin{proof}
+	Supponiamo che \(G\) sia il gruppo in ipotesi. Fissiamo \(d\mid n\) e definiamo \(G_d\) l'insieme degli elementi di ordine \(d\) in \(G\).\graffito{chiaramente \(G_d\) può essere vuoto}
+	Se \(G_d\neq \emptyset\) allora esiste \(y\in G_d\). Consideriamo il gruppo generato da \(y\), per costruzione avremo che \(\abs{\langle y \rangle}=d\), da cui
+		\[
+		\langle y \rangle \subseteq \Set{x\in G | x^d = 1} \implies \langle y \rangle = \Set{x\in G | x^d =1},
+		\]
+	poiché, per ipotesi,
+		\[
+		d = \abs{\langle y \rangle} \le \abs{\Set{x\in G | x^d = 1}} \le d.
+		\]
+	Segue che \(G_d\) è l'insieme dei generatori di \(\langle y \rangle\), per cui \(\abs{G_d}=\j(d)\).
+	Quindi per ogni \(d\mid n\), si ha
+		\[
+		\abs{G_d} = \begin{cases}
+					\j(d) & \text{se }G_d\neq \emptyset\\
+					0 & \text{altrimenti}
+					\end{cases}
+		\implies \abs{G_d} \le \j(d).
+		\]
+	Ora
+		\[
+		n = \abs{G} = \sum_{d\mid n} \abs{G_d} \le \sum_{d\mid n} \j(d) = n \implies \abs{G_d} = \j(d)\,\fa d \mid n.
+		\]
+	Da cui \(G_d\neq \emptyset\) per ogni \(d\mid n\) e, in particolare, \(G_n\neq \emptyset\); ovvero c'è almeno un elemento di ordine \(n\) in \(G\) e pertanto \(G\) è ciclico.
+	\end{proof}
+
+	\begin{teor}{Gruppo moltiplicativo di un campo finito è ciclico}{gruppoMoltiplicativoCampoFinitoCiclico}
+	Sia \(\F_q\) un campo finito. Allora \(\F_q^*\) è un gruppo ciclico.
+	\end{teor}
+
+	\begin{proof}
+	Applichiamo il lemma precedente. Osserviamo che l'insieme
+		\[
+		\Set{x \in \F_q | x^d = 1} = \Set{x\in \F_q | x \text{ radice di }x^d -1 = 0}
+		\]
+	e in un campo un polinomio di grado \(d\) ha al più \(d\) radici. Per cui l'ipotesi del teorema è soddisfatta, da cui la tesi.
+	\end{proof}
+
+\section{Ricerca di radici primitive}
+
+	Consideriamo \(\F_q\) con \(q=p^m, m\ge 1\). Per definizione \(\abs{F_q^*}=q-1\), per cui \(\F_q^*\) ha \(\j(q-1)\) radici primitive.
+	Da ciò segue che scegliendo casualmente un elemento di \(F_q^*\), la probabilità che questo sia una radice primitiva è
+		\[
+		\frac{\j(q-1)}{q-1}.
+		\]
+	Per stimare tale probabilità è necessario conoscere la fattorizzazione di \(q-1\).
+	Un caso particolarmente favorevole si ha per i primi di Germain, ovvero per i primi \(p\) tali che \(q=2p+1\) è primo. Se scegliamo \(q\) e consideriamo \(\Z_q^*\), avremo \(\abs{\Z_q^*}=2p\), per cui vi sono \(\j(2p)=p-1\) radici primitive. In particolare, la probabilità di individuare casualmente una radice primitiva è
+		\[
+		\frac{\j(q-1)}{q-1} = \frac{p-1}{2p} \approx \frac{1}{2}.
+		\]
+
+	\begin{prop}{Radici primitive per primi di Germain}{radiciPrimitivePrimiGermain}
+	Consideriamo \(\F_q\) con \(q=2p+1\) e \(p\) un primo di Germain. Se \(x\in\{2,\ldots,q-2\}\) allora \(x\) è una radice primitiva se e soltanto se
+		\[
+		x^p \equiv -1 \pmod{q}.
+		\]
+	\end{prop}
+
+	\begin{proof}
+	Sappiamo che \(\abs{\Z_q^*}=2p\), per cui ogni elemento distinto da \(\pm 1\) ha ordine \(p\) oppure \(2p\).
+	Inoltre, dal criterio di Eulero, sappiamo che
+		\[
+		x^p = x^{\frac{q-1}{2}} \equiv \pm 1 \pmod{q}. 
+		\]
+	Per cui può accadere che \(x^p \equiv 1\), ovvero \(x\) ha ordine \(p\); oppure
+		\[
+		x^p \equiv -1 \implies x^{2p} \equiv 1 \pmod{q},
+		\]
+	ovvero \(x\) è una radice primitiva.
+	\end{proof}
+
+	\begin{oss}
+	Tramite il simbolo di Legendre è computazionalmente facile testare se \(x^p \equiv -1 \pmod{q}\). Infatti sappiamo che
+		\[
+		\lege{x}{q} = x^{\frac{q-1}{2}} \equiv \pm 1 \pmod{q}.
+		\]
+	\end{oss}
+	
+	\begin{prop}{Radici primitive per fattorizzazione nota}{radiciPrimitiveFattorizzazioneNota}
+	Consideriamo il campo finito \(\F_q\) e supponiamo di conoscere la fattorizzazione \(q-1=p_1^{\a_1} \cdot\ldots\cdot p_s^{\a_s}\). Allora \(g\in\F_q^*\) è una radice primitiva se e soltanto se
+		\[
+		g^{\frac{q-1}{p_i}} \not\equiv 1 \pmod{q}\,\fa p_i \mid q-1.
+		\]
+	\end{prop}
+
+	\begin{proof}
+	Da fare.
+	\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 09/05/2017 - DECIMA SETTIMANA (1)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Crittosistema di Elgamal}
+
+	Il crittosistema di Elgamal, sviluppato nel 1985, è un crittosistema a chiave pubblica che sfrutta il problema del logaritmo discreto.
+	Scelto \(p\) primo e \(g\) un elemento primitivo modulo \(p\), si ha:
+	\begin{itemize}
+		\item \(P=\Z_p^*\) e \(C=\Z_p^* \times \Z_p^*\).
+		\item Lo spazio delle chiavi è
+			\[
+			K = \Set{(p,g,a,\b) | \b\equiv g^a \pmod{p}}.
+			\]
+	\end{itemize}
+	Da questo insieme distinguiamo
+	\begin{itemize}
+		\item \((p,g,\b)\) la chiave pubblica.
+		\item \(a\) la chiave privata.
+	\end{itemize}
+	Sia \(k=(p,g,a,\b)\in K\) una chiave.
+	Supponiamo di avere \(x\in P\), per criptare il mittente sceglie casualmente, e tenendo segreto, \(h\in\Set{2,\ldots,p-2}\) e calcola
+		\[
+		e_k(x,h) = (y_1,y_2) \qquad\text{dove } \begin{cases}
+												y_1 = g^h\\
+												y_2 = x\,\b^h \pmod{p}
+												\end{cases}
+		\]
+	Il destinatario riceve quindi una coppia \((y_1,y_2)\), per decifrare sfrutta la sua conoscenza di \(a\) e calcola
+		\[
+		d_k\big((y_1,y_2)\big) = y_2 {(y_1^a)}^{-1} \pmod{p}.
+		\]
+	Osserviamo che, pur non conoscendo \(h\), questo fornisce il messaggio. Infatti
+		\[
+		y_2{(y_1^a)}^{-1} = x\,b^h{(g^{a\,h})}^{-1} = x\,g^{a\,h}{(g^{a\,h})}^{-1} \equiv x \pmod{p}.
+		\]
+
+	\begin{oss}
+	Il mittente sceglie un nuovo \(h\) ad ogni trasmissione, rendendo così il risultato della cifratura randomico anche per messaggi identici.
+	\end{oss}
+
+	\begin{oss}
+	Come nello scambio della chiave di Diffie-Hellman, anche in questo procedimento non è necessario invertire la funzione
+		\[
+		x \longmapsto g^x \pmod{p}.
+		\]
+	\end{oss}
+
+	\begin{ese}
+	Prendiamo \(p=83,g=2\) e la chiave privata \(a=30\). Avremo quindi \(\b=g^a \equiv 40 \pmod{p}\), da cui la chiave pubblica
+		\[
+		(p,g,\b) = (83,2,40).
+		\]
+	Supponiamo che Alice voglia cifrare \(x=54\). Sceglie casualmente \(h=13\) e invia a Bob
+		\[
+		(y_1,y_2) = (g^h,x\,\b^h) \equiv (58,71) \pmod{p}.
+		\]
+	Per decifrare Bob calcola
+		\[
+		{(g^h)}^a \equiv 9 \pmod{p} \qquad\text{da cui }{(g^h)}^{-a} = 9^{-1} \equiv 37 \pmod{p}.
+		\]
+	Pertanto \(x = y_2 y_1^{-a} = 71 \cdot 37 \equiv 54 \pmod{83}\).
+	\end{ese}
+
+	\begin{oss}
+	Di fatto la cifratura \(x\mapsto x\,g^{h\,a}\) è una moltiplicazione. Alternativamente si può usare un cifrario a blocchi (ad esempio AES) e cifrare
+		\[
+		x \longmapsto e_{g^{h\,a}}(x).
+		\]
+	\end{oss}
+	\noindent
+	Anche per il crittosistema di Elgamal, si utilizzano primi \(p\) con determinate caratteristiche. In particolare si usa \(p\) di almeno \(2048\) bit, dove \(p-1\) deve essere a fattorizzazione nota e con un fattore primo grande.
+
+	Come per lo scambio della chiave di Diffie-Hellman, anche il crittosistema di Elgamal può essere implementato utilizzando un gruppo ciclico arbitrario. Una scelta comune è il gruppo moltiplicativo di un gruppo finito \(F_{p^m}^*\), in particolare con \(p=2\).
+
+\section{Sicurezza del logaritmo discreto}
+
+	In questo paragrafo ci occuperemo di descrivere alcuni algoritmi, sia generali che speciali, per ricavare il logaritmo discreto. Tali algoritmi sono applicabili a qualsiasi gruppo \(G\) ciclico una volta data un'opportuna struttura al gruppo; per questioni di semplicità gli esempi verranno presi in \(G=\Z_p^*\).
+
+	Ricordiamo che dato \(g\) un generatore di \(G\) e preso \(y\in G\) con \(y\neq 1\), il problema è quello di determinare \(x\) tale che \(g^x = y\).
+	Il metodo più elementare per ricavare \(x\) è l'attacco a forza bruta. Tale metodo consiste nel calcolo di
+		\[
+		g^i \qquad\text{per } i = 1, \ldots ,n-1, \text{con } n=\abs{G}.
+		\]
+	Chiaramente il numero di tentativi necessari per avere successo è dell'ordine \(\bO(n\approx 2^k)\), il che rende tale approccio paragonabile al metodo di divisioni successive per la fattorizzazione.
+
+	\begin{oss}
+	L'unico motivo pratico per cui potrebbe essere necessario un attacco a forza bruta è quello di catalogare interamente \(G\) tramite il generatore \(g\).
+	\end{oss}
+
+\subsection{Algoritmo di Shanks}
+
+	L'algoritmo di Shanks, anche detto algoritmo \emph{baby-step giant-step}, è composto di due passi principali. Il primo è precomputabile poiché dipende solo dal gruppo su cui si opera e non da \(y\). 
+
+	Detto \(n\) l'ordine di \(G\), definiamo \(m=\lceil\sqrt{n}\rceil\). Procediamo con la descrizione dei passi algoritmo:
+	\begin{enumerate}
+		\item Si calcola \((j,g^{m\,j})\) per \(j=0,1,\ldots,m-1\) e si costruisce la lista \(L_1\) di tali coppie ordinata rispetto alla seconda componente.
+		\item Si calcola \((i,y\,g^{-i})\) per \(i=0,1,\ldots,m-1\) e si costruisce la lista \(L_2\) di tali coppie.
+		\item Si cercano due coppie \((j,a)\in L_1\) e \((i,a)\in L_2\) con la stessa seconda componente \(a\). Se tale collisione esiste si ha
+			\[
+			g^{m\,j} = y\,g^{-i} \implies y = g^{m\,j+i} \implies \log_g y = m\,j + i.
+			\]
+	\end{enumerate}
+
+	\begin{oss}
+	La lista \(L_1\) viene ordinata poiché, durante il calcolo degli elementi di \(L_2\), si può facilmente verificare un'eventuale collisione.
+	\end{oss}
+
+	\begin{ese}
+	Sia \(G=\Z_p^*\) con \(p=37\). Prendiamo \(g=2\) e supponiamo di voler trovare \(\log_g 28\).
+	L'ordine di \(G\) è \(36\), da cui
+		\[
+		m = \lceil\sqrt{36}\rceil = 6.
+		\]
+	Applicando l'algoritmo otteniamo le liste \(L_1\) e \(L_2\):
+		\begin{gather*}
+		L_1 = \Set{(0,1),(4,10),(5,11),(2,26),(1,27),(3,36)}\\
+		L_2 = \Set{(0,28),(1,14),(2,7),(3,22),(4,11),(5,24)}.
+		\end{gather*}
+	Vi è una collisione tra \((5,11)\in L_1\) e \((4,11)\in L_2\), pertanto
+		\[
+		\log_g 28 = 34.
+		\]
+	\end{ese}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 16/05/2017 - UNDICESIMA SETTIMANA (1)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Algoritmo di Pohlig-Hellman}
+
+	Questo algoritmo sfrutta la fattorizzazione dell'ordine di \(G\) per la ricerca del logaritmo discreto. Cominciamo con l'osservare che se \(x=\log_g y\), allora è sufficiente conoscere \(x\) modulo \(p^a\) per ogni \(p\mid n\) con \(a\) il massimo esponente di \(p\) nella fattorizzazione di \(n\).
+	Infatti, scritto \(n=p_1^{a_1} \cdot\ldots\cdot p_s^{a_s}\), se conoscessimo
+		\[
+		x_1 = x \pmod{p_1^{a_1}}, x_2 = x \pmod{p_2^{a_2}}, \ldots, x_s = x \pmod{p_s^{a_s}},
+		\]
+	possiamo ricavare \(x\) tramite il teorema cinese dei resti.
+
+	Anche in questo algoritmo vi è un passaggio di precomputazione, dipendente solo dal gruppo \(G\) su cui si opera, e un passo che, dato \(y\in G\), cerca \(x=\log_g y\). Procediamo con la descrizione dei passi:
+
+	\begin{enumerate}
+		\item Si fattorizza \(n=\abs{G}\) ottenendo
+			\[
+			n = \prod_{i=1}^s p_i^{a_i}.
+			\]
+		Per ogni \(p\mid n\) si calcolano le radici \(p\)-esime dell'unità:
+			\[
+			r_{j,p} = g^{\frac{n}{p}\,j} \qquad\text{con }j=0,\ldots,p-1.
+			\]
+		\item Per ogni \(p\mid n\), detto \(a\) il massimo esponente di \(p\) nella fattorizzazione di \(n\), cerchiamo \(x \pmod{p^{a}}\). Scriviamo \(x\) in base p:
+			\[
+			x \pmod{p^a} = x_0  + x_1 p + x_2 p^2 + \ldots x_{a-1}p^{a-1} \qquad\text{con } 0 \le x_j  \le p-1.
+			\]
+		L'obiettivo è ricavare i \(x_1 ,\ldots,x_{a-1}\). Descriviamo la ricerca di \(x_0 \), come vedremo il procedimento si generalizza per ogni \(x_j \) una volta che si conoscono i precedenti. Calcoliamo \(y^{\frac{n}{p}}\), dove
+			\[
+			\begin{split}
+			y^{\frac{n}{p}} & = g^{x\,\frac{n}{p}} = g^{\frac{n}{p}\,(x_0 +x_1 p+\ldots+x_{a-1}p^{a-1})} = g^{x_0 \frac{n}{p}+(x_1 +x_2 p+\ldots+x_{a-1}p^{a-1})\,n}\\
+			& = g^{x_0 \frac{n}{p}}g^{t\,n} = g^{x_0 \frac{n}{p}},
+			\end{split}
+			\]
+		d'altronde, per costruzione, \(0 \le x_0  \le p-1\), per cui
+			\[
+			g^{x_0 \frac{n}{p}} = r_{j_0,p} \implies x_0 = j_0 
+			\]
+		per qualche \(j_0\) trovato nel passo precedente.
+		Per la ricerca di \(x_1\) si applica un procedimento analogo calcolando
+			\[
+			y_1^{\frac{n}{p^2}} \qquad\text{dove } y_1 = y\,g^{-x_0}.
+			\]
+		Ora
+			\[
+			y_1^{\frac{n}{p^2}} = g^{\frac{n}{p^2}\,(x_1 p + x_2 p^2 +\ldots+ x_{a-1} p^{a-1})} = g^{x_1 \frac{n}{p}}g^{t_1 n} = g^{x_1 \frac{n}{p}}.
+			\]
+		Nuovamente \(0\le x_1 \le p-1\) implica che esiste \(j_1\) tale che
+			\[
+			g^{x_1 \frac{n}{p}} = r_{j_1,p} \implies x_1 = j_1.
+			\]
+		Il procedimento, iterato per gli altri \(x_i\), ci fornisce
+			\[
+			x \pmod{p^a} = j_0 + j_1 p + j_2 p^2 + \ldots + j_{a-1} p^{a-1}.
+			\]
+		\item Il passo precedente, iterato per tutti gli \(p^a\) della fattorizzazione di \(n\) ci fornisce
+			\[
+			x \pmod{p_1^{a_1}}, x \pmod{p_2^{a_2}}, \ldots, x \pmod{p_s^{a_s}},
+			\]
+		tramite i quali possiamo calcolare \(x\) applicando il teorema cinese dei resti.
+	\end{enumerate}
+
+	\begin{oss}
+	Questo algoritmo è efficiente quando l'ordine del gruppo \(G\) non ha fattori grandi.
+	\end{oss}
+
+	\begin{ese}
+	Consideriamo il gruppo \(G=\Z_{37}^*\), il cui ordine è \(n=36\), e il suo generatore \(g=2\). Svolgiamo il primo passo di precomputazione:
+	\begin{enumerate}
+		\item \(n=36=2^2 3^2\) quindi dobbiamo calcolare le radici \(2\)-esime e \(3\)-esime dell'unità:
+		\begin{itemize}
+			\item Per \(p=2\) avremo
+				\[
+				r_{0,2} = 1 \qquad\text{e}\qquad r_{1,2} = -1.
+				\]
+			\item Per \(p=3\) avremo
+				\[
+				r_{0,3} = 1 \qquad r_{1,3} = 26 \qquad r_{2,3} = 10
+				\]
+		\end{itemize}
+		\item Supponiamo di voler calcolare il logaritmo discreto \(x\) di \(y=28\). Dobbiamo trovare
+			\[
+			x \pmod{2^2} \qquad\text{e}\qquad x \pmod{2^3}.
+			\]
+		\begin{itemize}
+			\item Per \(p=2\) scrivo \(x \pmod{2^2} = x_0 + x_1 \cdot 2\). \(x_0\) si ottiene calcolando
+				\[
+				y^{\frac{n}{2}} = 1 = r_{0,2} \implies x_0 = 0.
+				\]
+			\(x_1\) si ottiene da \(y_1=y\,g^{-x_0}\) calcolando
+				\[
+				y_1^{\frac{n}{2^2}} = -1 = r_{1,2} \implies x_1 = 1.
+				\]
+			Pertanto \(x\pmod{2^2} = 0+1 \cdot 2 = 2\).
+			\item Per \(p=3\) scrivo \(x \pmod{3^2} = x_0 + x_1 \cdot 3\). \(x_0\) si ottiene calcolando
+				\[
+				y^{\frac{n}{3}} = 26 = r_{1,3} \implies x_0 = 1.
+				\]
+			\(x_1\) si ottiene da \(y_1=y\,g^{-x_0}\) calcolando
+				\[
+				y_1^{\frac{n}{3^2}} = 10 = r_{2,3} \implies x_1 = 2.
+				\]
+			Pertanto \(x \pmod{3^2} = 1 + 2 \cdot 3 = 7\)
+		\end{itemize}
+		\item Impostando il sistema
+			\[
+			\begin{cases}
+			x \equiv 2 \pmod{4}\\
+			x \equiv 7 \pmod{9}
+			\end{cases} \implies
+			\begin{cases}
+			x \equiv -2 \pmod{4}\\
+			x \equiv -2 \pmod{9}
+			\end{cases}
+			\]
+		si ottiene che \(x=\log_g y = -2 = 36\).
+	\end{enumerate}
+	\end{ese}
+
+\subsection{Algoritmo Index-Calculus}
+
+	Questo algoritmo, l'ultimo che studieremo per la ricerca del logaritmo discreto, è un algoritmo speciale per i gruppi \(\F_q^*\), noi vedremo in particolare il caso per \(q=p\), ovvero per \(\F_q^* = \Z_p^*\).
+
+	Come per alcuni algoritmi di fattorizzazione studiati in precedenza, sfrutteremo i numeri \(B\)-smooth per qualche insieme di primi \(B\).
+	Consideriamo quindi un intero \(b\) che funge da limite superiore e prendiamo un insieme \(B\) si \(b\) primi piccoli:
+		\[
+		B = {p_1, p_2, \ldots p_b} \qquad\text{con \(p_i\) primi piccoli distinti}.
+		\]
+	Procediamo con la descrizione dell'algoritmo:
+	\begin{enumerate}
+		\item Supponiamo di trovare \(c \ge b\) interi distinti \(x_1,\ldots,x_c\) tali che
+			\[
+			g_i = g^{x_{i}} \pmod{p}
+			\]
+		sia un \(B\)-numero. Quindi
+			\[
+			g_i = \prod_{j=1}^b p_i^{a_{ij}} \pmod{p} \qquad\text{con }a_{ij}\ge 0.
+			\]
+		In ognuna di queste \(c\) uguaglianze posso passare ai logaritmi
+			\[
+			g_i = g^{x_i} = \prod_{j=1}^b p_j^{a_{ij}} \implies x_i = \sum_{j=1}^b a_{ij} \log_g p_j \pmod{p-1}.
+			\]
+		Quindi otteniamo il seguente sistema lineare
+			\[
+			\begin{cases}
+			x_1 = \sum_{j=1}^b a_{1j} \log_g p_j \pmod{p-1}\\
+			\vdots\\
+			x_c = \sum_{j=1}^b a_{cj} \log_g p_j \pmod{p-1}
+			\end{cases}
+			\]
+		Di tali equazioni conosciamo gli \(x_i\) e \(a_{ij}\).
+		Abbiamo quindi un sistema lineare nelle incognite \(\log_g p_i\) con \(i=1,\ldots,b\).
+		Dal momento che vi sono \(b\) incognite e \(c\) equazioni con \(b\le c\) avremo certamente una soluzione.
+		Risolvendo il sistema otteniamo quindi
+			\[
+			\log_g p_1, \log_g p_2, \ldots, \log_g p_b,
+			\]
+		per ogni \(p_i \in B\).
+		\item Dato \(y\) vogliamo trovare \(x\) tale che \(g^x=y\). Troviamo \(x^*\), eventualmente anche \(x^*=0\) tale che
+			\[
+			g^{x^*} y
+			\]
+		sia \(B\)-smooth. In tal caso avremo
+			\[
+			g^{x^*} y = \prod_{i=1}^b p_i^{a_i^*} \implies x^* + \log_g y = \sum_{i=1}^b a_i^* \log_g p_i,
+			\]
+		da cui
+			\[
+			x = \log_g y = -x^* + \sum_{i^1}^b a_i^* \log_g p_i.
+			\]
+	\end{enumerate}
+
+	\begin{oss}
+	La complessità di questo algoritmo è stimata essere sottoesponenziale. Inoltre la sua efficienza non dipende dalla scelta del primo \(p\).
+	\end{oss}
+
+	\begin{ese}
+	Sia \(p=101\), lavoriamo quindi sul gruppo \(G=\Z_{101}^*\) con il generatore \(g=3\). Cominciamo con il passo di precomputazione:
+	\begin{enumerate}
+		\item Scegliamo casualmente alcuni \(x_i\), calcoliamo \(g_i=g^{x_i}\) e troviamone la loro fattorizzazione. Il nostro obiettivo è trovare più \(x_i\) del numero di primi necessari a rendere i \(g_i\) \(B\)-smooth, dove \(B\) è il nostro insieme di primi.
+		\begin{itemize}
+			\item Prendiamo \(x_1=10\), avremo
+				\[
+				g_1 = g^{x_1} = 65 \pmod{p} = 5 \cdot 13,
+				\]
+			per cui \(5,13 \in B\).
+			\item Prendiamo \(x_2=12\), avremo
+				\[
+				g_2 = g^{x_2} = 80 \pmod{p} = 2^4 \cdot 5,
+				\]
+			per cui \(2\in B\).
+			\item Prendiamo \(x_3 = 14\), avremo
+				\[
+				g_3 = g^{x_3} = 13 \pmod{p}.
+				\]
+		\end{itemize}
+		Abbiamo quindi trovato tre elementi tali che i rispettivi \(g_i\) sono \(B\)-smooth su
+			\[
+			B = \{2,5,13\},
+			\]
+		che ha a sua volta tre elementi. Scriviamo quindi il sistema lineare passando ai logaritmi
+			\[
+			\begin{cases}
+			x_1 = \log_g 5 + \log_g 13 \pmod{p-1}\\
+			x_2 = 4\log_g 2 + \log_g 5 \pmod{p-1}\\
+			x_3 = \log_g 13 \pmod{p-1}
+			\end{cases} \implies
+			\begin{cases}
+			\log_3 13 = 14 \pmod{100}\\
+			\log_3 5 = 96 \pmod{100}\\
+			4\log_3 2 = 16 \pmod{100}
+			\end{cases}
+			\]
+		Osserviamo che, dal momento che \((4,100)\mid 16\), la congruenza \(4\log_3 2 =16 \pmod{100}\) ha precisamente \((4,100)=4\) soluzioni modulo \(100\), che sono \(4,29,54,79\). Per trovare la soluzione che effettivamente risolve il logaritmo discreto di \(2\) si procede per tentativi, nel nostro caso troviamo
+			\[
+			\log_3 2 = 29.
+			\]
+		\item Supponiamo di voler trovare il logaritmo discreto di \(y=87\). Osserviamo che, preso \(x^*=5\), si ha
+			\[
+			g^{x^*}y = 3^5 \cdot 87 = 32 \pmod{p} \qquad\text{dove }32 =2^5,
+			\]
+		per cui \(g^{x^*}y\) è \(B\)-smooth. Otteniamo quindi la soluzione passando al logaritmo:
+			\[
+			x^* + \log_g y = 5\log_g 2 \iff 5 + \log_3 87 = 5 \cdot 29 \implies \log_3 87 = 40.
+			\]
+	\end{enumerate}
+	\end{ese}

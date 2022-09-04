@@ -1,0 +1,3 @@
+[submodule "latex-notes-cls"]
+	path = latex-notes-cls
+	url = https://github.com/edoars/latex-notes-cls

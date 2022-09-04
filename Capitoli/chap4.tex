@@ -1,0 +1,172 @@
+%!TEX root = ../main.tex
+\chapter{Firma digitale}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%LEZIONE 11/05/2017 - DECIMA SETTIMANA (2)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	La firma è la componente del documento che certifica la provenienza del messaggio. Per essere valida deve far parte fisicamente del documento, quindi non apposta su un supporto di quest'ultimo, dovrebbe essere verificabile e difficile da falsificare.
+	Anche nel caso di uno scambio di messaggi all'interno di un crittosistema è importante essere certi di chi sia il mittente. In un crittosistema simmetrico, la conoscenza della chiave da entrambe le parti rende superflua una firma aggiuntiva in quanto una volta che il messaggio decifrato ha senso, la legittima provenienza è garantita.
+	D'altronde, in un crittosistema a chiave pubblica, chiunque può scrivere un messaggio cifrato a Bob affermando di essere Alice. Pertanto è necessaria una firma digitale.
+
+	Questa firma dovrà avere le stesse caratteristiche di una firma fisica, in particolare
+	\begin{itemize}
+		\item Deve verificare l'identità del mittente.
+		\item Deve essere vincolante a livello legale in modo che il mittente non possa ripudiare ciò che ha firmato.
+		\item Deve garantire che il messaggio non sia stato alterato dopo l'invio.
+	\end{itemize}
+
+\section{Schemi di firma}
+
+	Uno schema di firma si basa tipicamente su crittosistemi a chiave pubblica e si compone di due algoritmi:
+	\begin{itemize}
+		\item Un algoritmo che produce la firma sulla base del messaggio e di una chiave privata.
+		\item Un algoritmo di verifica che si basa sul messaggio ricevuto e su una chiave pubblica del mittente.
+	\end{itemize}
+	Quindi per firmare il messaggio \(x\), Alice usa l'algoritmo \(s_k\) che dipende da una chiave \(k\), e calcola \(y=s_k(x)\).
+	Viceversa, data una coppia \((x,y)\), dove \(x\) è il messaggio e \(y\) la firma, l'algoritmo \(v_k(x,y)\) ritorna vero se \(y\) è una firma valida di \(x\) e falso altrimenti.
+
+	\begin{oss}
+	In questo momento, e nella descrizione dei prossimi schemi di firma, non si richiede che \((x,y)\) sia cifrato. Accenneremo alle implementazioni reali che tengono conto della cifratura.
+	\end{oss}
+
+	\begin{defn}{Schema di firma}{schemaFirma}\index{Schema di firma}
+	Uno \emph{schema di firma} è una \(5\)-pla \((P,A,K,S,V)\) dove
+	\begin{itemize}
+		\item \(P\) è un insieme finito di possibili messaggi.
+		\item \(A\) è un insieme finito di possibili firme.
+		\item \(K\), lo spazio delle chiavi, è un insieme finito di possibili chiavi.
+		\item Per ogni \(k\in K\) c'è un algoritmo si firma \(s_k\in S\) e un corrispondente algoritmo di verifica \(v_k\in V\).
+		\item Le mappe \(s_k \colon P \to A\) e \(v_k\colon P \times A \to \{\text{Vero},\text{Falso}\}\) sono tali che, per ogni \(x\in P\) e per ogni \(y\in A\), vale
+			\[
+			v_k(x,y) = 	\begin{cases}
+						\text{Vero} & \text{se }y=s_k(x)\\
+						\text{Falso} & \text{se }y\neq s_k(x)
+						\end{cases}
+			\]
+	\end{itemize}
+	\end{defn}
+	\noindent
+	L'idea per uno schema di firma è, spesso, quello di usare un crittosistema a chiave pubblica. Tipicamente il mittente è in possesso di una propria chiave \(k_A\), composta da una parte \(e_{k_A}\) pubblica ed una \(d_{k_A}\) privata. Si potrebbe quindi firmare il messaggio \(x\) ponendo
+		\[
+		s_{k_A}(x) = y = d_{k_A}(x),
+		\]
+	che renderebbe privato l'algoritmo di firma in quanto il mittente è l'unico a poter utilizzare \(d_{k_A}\) per decifrare.
+	A questo punto si invierebbe la coppia \((x,y)\) e, per verificare la firma, si calcolerebbe
+		\[
+		e_{k_A}(y).
+		\]
+	Se \(e_{k_A}(y)=x\) allora l'algoritmo di verifica riporterebbe esito positivo.
+
+	\begin{oss}
+	Nelle implementazioni reali, a questo procedimento segue la cifratura della coppia \((x,y)\).
+	Osserviamo che è importante cifrare dopo aver firmato, poiché, scambiando tale ordine, è possibile convincere il destinatario di essere il mittente di un messaggio originariamente inviato da qualcun altro.
+	Infatti, supponiamo che \(x\) sia il messaggio. Alice cifra \(z=e_{k_B}(x)\), firma \(y=s_{k_A}(z)\) e invia la coppia \((z,y)\) a Bob. Se Eve intercetta la trasmissione è in grado di firmare il messaggio \(z\), pur non potendo decifrarlo.
+	Può infatti calcolare \(\tilde{y}=s_{k_E}(z)\) e inviare la coppia \((z,\tilde{y})\) a Bob. Tale messaggio passerà la verifica di Bob che lo accetterà come proveniente da Eve.
+	\end{oss}
+
+	Proviamo ad applicare quanto detto al crittosistema RSA.
+	Sia \(N=p\,q\) con \(p,q\) primi. Sia \(P=A=\Z_N\), lo spazio delle chiavi è
+		\[
+		K = \Set{(N,p,q,d,e) | e\,d \equiv 1 \pmod{\j(N)}}.
+		\]
+	\((N,e)\) è la chiave pubblica, \((p,q,d)\) la chiave privata. Se \(k=(N,p,q,d,e)\) è una chiave, si pone
+		\[
+		s_k(x) = x^d \pmod{N} \qquad\text{e}\qquad v_k(x,y) = 	\begin{cases}
+																\text{Vero} & \text{se }x \equiv y^e \pmod{N}\\
+																\text{Falso} & \text{altrimenti}
+																\end{cases}
+		\]
+
+	\begin{ese}
+	La chiave RSA di Alice è
+		\[
+		k_A = (N_A,p_A,q_A,d_A,e_A) = (2773,47,59,17,157).
+		\]
+	Alice vuole firmare e trasmettere il messaggio \(x=920\). Utilizza quindi la chiave privata \(d_A=17\) e calcola
+		\[
+		s_{k_A}(x) = 920^{17} \equiv 948 \pmod{N}.
+		\]
+	La coppia (messaggio, firma) è pertanto \((920,948)\).
+	Bob riceve
+		\[
+	 	(x,y) = (920,948),
+	 	\] 
+	 per verificare la firma \(y\) utilizza la chiave pubblica di Alice \(e_A=157\) e calcola
+	 	\[
+	 	y^{e_A} = 948^{157} \equiv 920 = x\pmod{N},
+	 	\]
+	 per cui \(v_{k_A}(x,y)\) ritorna vero.
+	\end{ese}
+
+	\begin{oss}
+	Per combinare firma e cifratura, Alice genera la coppia (messaggio firma) \((x,y)\) con il metodo visto prima. A questo punto cifra la coppia come se fosse il messaggio da inviare a Bob, pertanto, utilizzando la chiave pubblica di Bob, calcola
+		\[
+		z = e_{k_B}\big((x,y)\big).
+		\]
+	Bob riceve \(z\) e decifrandolo con la sua chiave privata ottiene \((x,y)\). A questo punto utilizza l'algoritmo di verifica per controllare la firma.
+	\end{oss}
+
+\section{Schema di Elgamal}
+
+	Lo schema di firma basato sul crittosistema di Elgamal è lo schema standard utilizzato negli Stati Uniti. Osserviamo che, non trattandosi di un crittosistema deterministico, lo schema di firma non sarà lineare come nel caso di quello applicato ad RSA.
+	Consideriamo la chiave
+		\[
+		k_A = (p,g,a,\b) \qquad\text{con }\b=g^a \pmod{p},
+		\]
+	dove \(a\) è privato.
+	Supponiamo che Alice debba firmare \(x\in \Z_p^*\). Allora sceglie casualmente \(h\in\{2,\ldots,p-2\}\) tale che \((h,p-1)=1\), in modo tale che esista l'inverso di \(h\) modulo \(p-1\). Avremo
+		\[
+		s_{k_A}(x,h) = (z_1,z_2) \qquad\text{dove } \begin{cases}
+													z_1 = g^h \pmod{p}\\
+													z_2 = (x-a\,z_1)\,h^{-1} \pmod{p-1}
+													\end{cases}
+		\]
+	La verifica viene eseguita da Bob, il quale conosce \(g,p,\b\) e deve verificare \(\big(x,(z_1,z_2)\big)\). Calcola quindi
+		\[
+		g^x \pmod{p} \qquad\text{e}\qquad \b^{z_1} z_1^{z_2} \pmod{p},
+		\]
+	e accetta il messaggio se
+		\[
+		g^x \equiv \b^{z_1} z_1^{z_2} \pmod{p}.
+		\]
+	Infatti
+		\[
+		\b^{z_1} z_1^{z_2} = g^{a\,z_1} g^{h\,(x-a\,z_1)\,h^{-1}},
+		\]
+	dove \(h\,h^{-1} \equiv 1 \pmod{p-1}\), ovvero \(g^{h\,h^{-1}} \equiv g \pmod{p}\). Da cui
+		\[
+		\b^{z_1} z_1^{z_2} \equiv g^{a\,z_1} g^{x-a\,z_1} = g^x \pmod{p}.
+		\]
+
+	\begin{ese}
+	Prendiamo \(p=107,g=2,a=11\), da cui \(\b=g^a \equiv 15 \pmod{p}\), la chiave è pertanto
+		\[
+		(p,g,a,\b) = (107,2,11,15).
+		\]
+	Supponiamo che Alice debba firmare \(x=10\). Sceglie casualmente \(h=7\) dove \((7,p-1)=1\) e calcola \(7^{-1} \equiv 91 \pmod{p-1}\). Quindi calcola
+		\[
+		z_1 = g^h \equiv 21 \pmod{p} \qquad\text{e}\qquad z_2 = (x-a\,z_1)\,h^{-1} \equiv 29 \pmod{p-1}.
+		\]
+	Dopodiché trasmette a Bob la terna \(\big(x,(z_1,z_2)\big)=\big(10,(21,29)\big)\). Bob riceve la terna, eventualmente da decifrare, e per verificare calcola
+		\[
+		g^x \equiv 61 \pmod{p} \qquad\text{e}\qquad \b^{z_1}z_1^{z_2} \equiv 61 \pmod{p}.
+		\]
+	Dal momento che le quantità coincidono modulo \(p\), accetta il messaggio come autentico.
+	\end{ese}
+
+\section{Attacchi ad uno schema di firma}
+
+	In un attacco ad uno schema di firma, si vuole falsificare una firma in modo che passi il test di verifica come se fosse stato firmato dal mittente originale.
+	In generale, non è possibile firmare un messaggio arbitrario \(x\), d'altronde è facile produrre una coppia \((x,y)\) che passi il test nel momento in cui non si chieda alcuna condizione su \(x\).
+	Ad esempio, per lo schema di firma RSA, la coppia
+		\[
+		\big(e_A(y),y\big),
+		\]
+	passa la verifica per ogni \(y\).
+
+	\begin{notz}
+	La falsificazione appena descritta si chiama \emph{falsificazione esistenziale}, poiché si produce una coppia che supera la verifica ma senza avere alcun controllo sul messaggio.
+	\end{notz}
+	\noindent
+	Nelle implementazioni reali, questo tipo di attacco non è praticabile in quanto non si firma mai il messaggio \(x\) bensì un \emph{hash} di \(x\), ovvero una stringa ottenuta in modo unidirezionale da \(x\).
